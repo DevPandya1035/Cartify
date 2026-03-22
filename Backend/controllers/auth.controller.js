@@ -1,6 +1,6 @@
 import User from "../models/user.model.js"
 import jwt from "jsonwebtoken"
-
+import { redis } from "../lib/redis.js";
 
 
 const generateTokens = (userId) => {
@@ -71,7 +71,7 @@ export const login = async (req, res) => {
       const {accessToken,refreshToken} = generateTokens(user._id);
 
       await storeRefreshToken(user._id,refreshToken);
-      setCookies
+      setCookies(res,accessToken,refreshToken);
        
 
       res.json({
@@ -95,7 +95,7 @@ export const logout = async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
     if(refreshToken){
       const decoded = jwt.verify(refreshToken,process.env.REFRESH_TOKEN_SECRET);
-      await redis.del(`refresh_token:${decode.userId}`);
+      await redis.del(`refresh_token:${decoded.userId}`);
     }
     res.clearCookie("accessToken");
     res.clearCookie("refreshToken");
